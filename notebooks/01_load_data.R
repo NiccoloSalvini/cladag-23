@@ -1,33 +1,27 @@
-## load data 
-## "2023-01-09"
+library(dplyr) 
+library(janitor)
+library(purrr)
+library(vroom)
+library(stringr)
 
-## 1  load default data from `coresoir` ----
-## currently used 
-library(coresoi)
-data("mock_data_core")
+aggiudicazioni = vroom("data/aggiudicazioni_csv.csv", .name_repair = janitor::make_clean_names) # 1,622,864 × 18
+quadro_economico = vroom("data/quadro-economico_csv.csv", .name_repair = janitor::make_clean_names) # A tibble: 2,109,476 × 12
 
-## 2 load data from `corebigquery`  ----
-## not working
+cigs_2020 = map_df(list.files("data/2020", full.names = T), ~vroom(.x, .name_repair = janitor::make_clean_names))
 
 
-## 3 load data directly from BigQuery ----
-## not working
 
-# Load the BigQuery library
-library(bigrquery)
+## A tibble: 417,716 × 98
+cigs_2020_final = cigs_2020 %>% 
+  left_join(aggiudicazioni, by  ="cig") %>%
+  left_join(quadro_economico, by  = "id_aggiudicazione")
+  
 
-# Set up authentication
-# bq_auth(path = "auth.json")
-# 
-# # Set up the query parameters
-# project <- "my-project"
-# dataset <- "my-dataset"
-# table <- "my-table"
-# fields <- c("field1", "field2", "field3")
-# where_clause <- "WHERE field1 > 5"
-# limit <- 1000 # number of rows to return, max is 10,000
-# 
-# # Run the query and store the results in a data frame
-# df <- bq_project_query(project, paste0("SELECT ", paste0(fields, collapse = ", "), 
-#                                        " FROM `", dataset, ".", table, "` ", where_clause, 
-#                                        " LIMIT ", limit))
+saveRDS(cigs_2020_final,file = "data/cigs_2020_final.rds")
+
+
+# A tibble: 143,642 × 1 for cpv starting with 33
+cigs_2020_final %>% 
+  filter(substr(cod_cpv, 1, 2) == "33") %>% 
+  select(cod_cpv) %>% View
+
