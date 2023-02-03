@@ -25,7 +25,8 @@ saveRDS(cigs_2020_final,file = "data/cigs_2020_final.rds")
 
 
 # A tibble: 143,642 × 1 for cpv starting with 33
-cigs_2020_final %>% 
+cigs_2020_final_cpv33 = cigs_2020_final %>% 
   filter(substr(cod_cpv, 1, 2) == "33") %>% 
-  select(cod_cpv) %>% View
+  select(cod_cpv) 
 
+saveRDS(cigs_2020_final_cpv33, file = "data/cigs_2020_final_cpv33.rds")
