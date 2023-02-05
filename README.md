@@ -2,6 +2,12 @@
 
 SWO -R (reliable)- D (where R stands for reliable) has the potential to revolutionize the way we approach socio-economic applications. This paper will discuss the implications of intentionally or randomly (?) missing data on public Italian procurement, and how this can be addressed using spatial statistics/econometrics tools to uncover hidden patterns. We will discuss the challenges posed by the lack of data, and quality needs to be introduced in the vocabulary of Italian Open Procurement Data. We will also explore how SWORD can be used to improve decision-making in public procurement, and how it can be used to ensure that all parties involved are aware of the risks associated with missing data. Finally, we will discuss analysis results using ANAC data.
 
+
+...
+
+Enrichment data sources [Link](data/enrichment.md)
+
+
 ...
 
 
