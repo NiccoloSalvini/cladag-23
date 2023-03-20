@@ -2,29 +2,28 @@
 ##  "2023-01-09"
 library(dplyr)
 library(purrr)
-library(furrr)
-library(future)
 library(stringr)
-library(glue)
-library(sf)
 library(readr)
-library(janitor)
-library(jsonlite)
 
 
-
-
-
-## 0 select and prep ----
-prepped = mock_data_core %>%
-  select(-contains("cod"),
-         -contains("id"),
-         -contains("data"))
+enrich_comuni = read_rds(here("data", "enrich_comuni.rds"))
+cigs_2020_joined_filtr_cpv33 = read_rds(here("data", "cigs_2020_joined_filtr_cpv33.rds"))
+elenco_tabella_conversioni_codici_comuni = read_csv(here("data", "elenco_tabella_conversioni_codici_comuni.csv"))
 
 ## 0.1 rehydrata `luogo_istat`, per molti non c'è ----
-### passaggio mancante 
+### da `cf_amministrazione_appaltante` -> nome_comune -> codice_istat
+### prior rehydra  count NA  =  24
+### afert rehydra  count NA
+cigs_2020_joined_filtr_cpv33 %>% 
+  head(100) %>% 
+  mutate(
+    denominazione_comune = map_chr(.x = cf_amministrazione_appaltante, .f = from_cfamm_to_munname)
+  ) %>% 
+  left_join()
 
-
+cigs_2020_joined_filtr_cpv33 %>% 
+  head(100) %>% 
+  select(cf_amministrazione_appaltante)
 ## 1 arricchisci da https://www.indicepa.gov.it/ipa-portale/consultazione/indirizzo-sede/ricerca-ente ---- 
 
 ### step 1 prendi indirizzo da codice fiscale
@@ -39,28 +38,24 @@ from_address_to_latlong <- function(address) {
     return()
 }
 
+## guarda un p0'
+
+library(tidyverse)
+library(here)
+enrich_comuni = read_rds(here("data", "enrich_comuni.rds"))
+cigs_2020_joined_filtr_cpv33  = read_rds(here("data", "cigs_2020_joined_filtr_cpv33.rds"))
+
+joined  = cigs_2020_joined_filtr_cpv33 %>% 
+  left_join(enrich_comuni, by =  c("luogo_istat" = "codice_istat"), multiple = "any")
 
 
-## 1.1 arricchisci da codici istat ----
+### count quanti ne mancano di luoghi istat
 
-codici_istat = read_delim("data/codici_stat_istat.csv", delim =";", locale=locale(encoding="latin1"), name_repair = janitor::make_clean_names) %>% 
-  transmute(
-    codice_regione,
-    codice_dell_unita_territoriale_sovracomunale_valida_a_fini_statistici,
-    codice_comune_formato_alfanumerico,
-    denominazione_in_italiano,
-    denominazione_regione,
-    codice_comune_formato_numerico
-  )
-
-## assign 0 and 1 when are present or missing or wrong (which?)
-total = prepped %>% 
-  left_join(codici_istat, by =  c("luogo_istat" = "codice_comune_formato_numerico")) 
-  
+cigs_2020_joined_filtr_cpv33 %>% 
+  count(luogo_istat)
 
 
-
-
-
+cigs_2020_joined_filtr_cpv33 %>% 
+  filter(luogo_istat == "001048") %>% view
 
 

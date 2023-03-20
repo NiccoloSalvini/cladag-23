@@ -10,15 +10,21 @@ library(ComplexHeatmap)
 theme_set(theme_bw())
 
 ## load and prep
-source("notebooks/01_load_data.R")
-source("notebooks/02_prep_enrich_data.R")
+# source("notebooks/01_load_data.R")
+# source("notebooks/02_prep_enrich_data.R")
+
+
+cigs_2020_joined <- readRDS("~/Desktop/r_projects/cladag-23/data/cigs_2020_joined.rds")
 
 convert_missing <- function(x) ifelse(is.na(x), 0, 1)
-total_missing <- apply(total, 2, convert_missing)
+total_missing <- apply(cigs_2020_joined, 2, convert_missing)
 # https://bookdown.org/max/FES/understanding-the-nature-and-severity-of-missing-information.html#fig:missing-vis
 
+
+
+## heatmap ----
 Heatmap(
-  total_missing, 
+  total_missing[1:10,], 
   name = "Missing", #title of legend
   column_title = "Predictors", row_title = "Samples",
   col = c("black","lightgrey"),
@@ -35,7 +41,7 @@ total_flat <-
   mutate(flat = ifelse(flat == 1, "yes", "no"))
 
 
-## decide dimensions
+## missing pairs ----
 ggplot(total_flat, aes(col = flat)) + 
   geom_point(aes(x = Diameter, y = importo_lotto), alpha = .5) + 
   geom_rug(data = total_flat[is.na(total_flat$Mass),], 
@@ -50,16 +56,47 @@ ggplot(total_flat, aes(col = flat)) +
 
 
 
-## pca
-total_missing_pca <-
-  apply(total, MARGIN = 1, function(x)
-    sum(is.na(x))) / ncol(total)
+## pca ----
 
-pca_total <- prcomp(total_missing_pca)
+
+## convertig data into missing and non missing 0s and 1s
+## then calculating percentage of missing for each cols 
+## then retaining first two components which capture missingness
+
+ 
+total_missing_pcn <-
+  apply(cigs_2020_joined, MARGIN = 1, function(x)
+    sum(is.na(x))) / ncol(cigs_2020_joined)
+
+pca_total <- prcomp(total_missing)
 
 pca_d <- 
   data.frame(pca_total$x) %>%
-  dplyr::select(PC1) %>% 
-  mutate(Percent = total_missing_pca * 100) %>% 
-  dplyr::distinct(PC1, Percent)
+  dplyr::select(PC1, PC2) %>% 
+  mutate(Percent = total_missing_pcn * 100) %>% 
+  dplyr::distinct(PC1,PC2, Percent)
+
+pca_d_rng <- extendrange(c(pca_d$PC1, pca_d$PC2))
+
+# https://bookdown.org/max/FES/understanding-the-nature-and-severity-of-missing-information.html#fig:missing-PCA-dates
+ggplot(pca_d, aes(x = PC1, y = PC2, size = Percent)) +
+  geom_point(alpha = .5, col = "#1B9E77") +
+  xlim(pca_d_rng) + 
+  ylim(pca_d_rng) 
+  # scale_size(limits = c(0, 10), range = c(.5, 10))
+
+
+
+
+## redo it withouy grouping by contract,
+## instead grouping by row.
+
+
+
+
+## other viz
+
+
+
+
 

@@ -2,29 +2,29 @@ library(readxl)
 library(readr)
 library(dplyr)
 library(rsdmx)
+library(janitor)
 
 # ANAC ----
 anac_indicatori_comunali <- read_excel("data/enrichment/Indicatori Comunali - Dataset.xlsx", 
-                                          sheet = "Layout 2") %>% 
-  filter(`Anno SA` == 2019) %>% 
-  select(-`...9`)
+                                          sheet = "Layout 2", .name_repair = make_clean_names) %>% 
+  filter(anno_sa == 2019) %>% 
+  select(-x)
 
 anac_indicatori_contesto <- read_excel("data/enrichment/Indicatori Contesto - Dataset.xlsx", 
-                                          sheet = "Provincia") %>% 
-  filter(`Anno SA` == 2017) %>% 
-  select(-`...51`)
+                                         sheet = "Provincia",.name_repair = make_clean_names ) %>% 
+  filter(anno_sa == 2017) %>% 
+  select(-x)
 
 
 # Mef ----
 mef_irpef <- read_delim("data/enrichment/Redditi_e_principali_variabili_IRPEF_su_base_comunale_CSV_2020.csv", 
                                                                              delim = ";", escape_double = FALSE, trim_ws = TRUE,
-                        show_col_types = FALSE) %>% 
-  select(codice_istat = `Codice Istat Comune`, 
-         denominazione = `Denominazione Comune`, 
-         freq = `Reddito imponibile - Frequenza`, 
-         tot = `Reddito imponibile - Ammontare in euro`) %>% 
-  mutate(reddito_imponibile_medio = tot/freq)
-
+                        show_col_types = FALSE, name_repair = make_clean_names) %>% 
+  select(codice_istat_comune, 
+         denominazione_comune, 
+         reddito_imponibile_frequenza,
+         reddito_imponibile_ammontare_in_euro) %>% 
+  mutate(reddito_imponibile_medio = reddito_imponibile_ammontare_in_euro/reddito_imponibile_frequenza)
 
 # ISTAT ----
 sdmx.popolazione <- readSDMX(providerId = "ISTAT", 
@@ -85,3 +85,5 @@ enrich_comuni <- istat %>%
               select(codice_istat, reddito_imponibile_medio))
 
 saveRDS(enrich_comuni, file = "data/enrich_comuni.rds")
+
+

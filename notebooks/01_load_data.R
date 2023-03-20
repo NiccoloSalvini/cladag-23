@@ -19,7 +19,7 @@ cigs_2020 = map_df(list.files("data/2020", full.names = T), ~vroom(.x, .name_rep
 cigs_2020_final = cigs_2020 %>% 
   left_join(aggiudicazioni, by  ="cig") %>%
   left_join(quadro_economico, by  = "id_aggiudicazione")
-  
+
 
 saveRDS(cigs_2020_final,file = "data/cigs_2020_final.rds")
 
@@ -30,3 +30,4 @@ cigs_2020_final_cpv33 = cigs_2020_final %>%
   select(cod_cpv) 
 
 saveRDS(cigs_2020_final_cpv33, file = "data/cigs_2020_final_cpv33.rds")
+HyperWrite Logo
